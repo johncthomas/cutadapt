@@ -2,6 +2,7 @@
 from __future__ import print_function, division, absolute_import
 
 import shutil
+import os.path
 from nose.tools import raises
 from cutadapt.scripts import cutadapt
 from .utils import run, assert_files_equal, datapath, cutpath, redirect_stderr, temporary_path
@@ -330,3 +331,18 @@ def test_too_short_output_paired_option_missing():
 def test_nextseq_paired():
 	run_paired('--nextseq-trim 22', in1='nextseq.fastq', in2='nextseq.fastq',
 		expected1='nextseq.fastq', expected2='nextseq.fastq')
+
+
+def test_paired_demultiplex():
+	multiout = os.path.join(os.path.dirname(__file__), 'data', 'tmp-demulti.{name}.fasta')
+	params = ['-a', 'first=AATTTCAGGAATT', '-a', 'second=CTCCAGCTTAGACATAT',
+		'-A', 'ignored=CAGTGGAGTA', '-A', 'AATAACAGTGGAGTA',
+		'-o', multiout, datapath('twoadapters.fasta')]
+	assert cutadapt.main(params) is None
+	assert_files_equal(cutpath('twoadapters.first.fasta'), multiout.format(name='first'))
+	assert_files_equal(cutpath('twoadapters.second.fasta'), multiout.format(name='second'))
+	assert_files_equal(cutpath('twoadapters.unknown.fasta'), multiout.format(name='unknown'))
+	os.remove(multiout.format(name='first'))
+	os.remove(multiout.format(name='second'))
+	os.remove(multiout.format(name='unknown'))
+
