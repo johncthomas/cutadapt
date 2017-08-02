@@ -99,7 +99,7 @@ with open('README.rst', **encoding_arg) as f:
 
 setup(
 	name = 'cutadapt',
-	version = versioneer.get_version(),
+	version = versioneer.get_version() + '~keepadapt-v0.1b',
 	author = 'Marcel Martin',
 	author_email = 'marcel.martin@scilifelab.se',
 	url = 'https://cutadapt.readthedocs.io/',

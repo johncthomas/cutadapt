@@ -33,3 +33,4 @@ def compare_suffixes(s1, s2, wildcard_ref=False, wildcard_query=False):
 	s2 = s2[::-1]
 	_, length, _, _, matches, errors = compare_prefixes(s1, s2, wildcard_ref, wildcard_query)
 	return (len(s1) - length, len(s1), len(s2) - length, len(s2), matches, errors)
+	# astart, astop, rstart, rstop, matches, errors = alignment

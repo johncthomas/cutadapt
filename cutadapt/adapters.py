@@ -197,10 +197,14 @@ class Match(object):
 
 	TODO creating instances of this class is relatively slow and responsible for quite some runtime.
 	"""
+	# astart/astop are the locations of the bases of the adapter that match the read,
+	# rstart/rstop are the equivilent positions in the read. Indels mean these two may
+	# not have the same length
 	__slots__ = ['astart', 'astop', 'rstart', 'rstop', 'matches', 'errors', 'remove_before',
-		'adapter', 'read', 'length', '_trimmed_read', 'adjacent_base']
+		'adapter', 'read', 'length', '_trimmed_read', 'adjacent_base', 'keep_adapt']
 
-	def __init__(self, astart, astop, rstart, rstop, matches, errors, remove_before, adapter, read):
+	def __init__(self, astart, astop, rstart, rstop, matches, errors, remove_before, adapter, read,
+				 ):
 		"""
 		remove_before -- True: remove bases before adapter. False: remove after
 		"""
@@ -212,6 +216,9 @@ class Match(object):
 		self.errors = errors
 		self.adapter = adapter
 		self.read = read
+		#TODO: make this optional
+		#self.keep_adapt = adapter.keep_adapt
+		self.keep_adapt = True
 		if remove_before:
 			self._trim_front()
 		else:
@@ -284,7 +291,8 @@ class Match(object):
 
 	def _trim_front(self):
 		"""Compute the trimmed read, assuming it’s a 'front' adapter"""
-		self._trimmed_read = self.read[self.rstop:]
+		cut_pos = self.rstart if self.keep_adapt else self.rstop
+		self._trimmed_read = self.read[cut_pos:]
 		self.adjacent_base = ''
 
 	def _trim_back(self):
@@ -293,7 +301,8 @@ class Match(object):
 		if adjacent_base not in 'ACGT':
 			adjacent_base = ''
 		self.adjacent_base = adjacent_base
-		self._trimmed_read = self.read[:self.rstart]
+		cut_pos = self.rstop if self.keep_adapt else self.rstart
+		self._trimmed_read = self.read[:cut_pos]
 
 	def update_statistics(self, statistics):
 		"""Update AdapterStatistics in place"""
@@ -372,7 +381,8 @@ class Adapter(object):
 	"""
 
 	def __init__(self, sequence, where, max_error_rate=0.1, min_overlap=3,
-			read_wildcards=False, adapter_wildcards=True, name=None, indels=True):
+			read_wildcards=False, adapter_wildcards=True, name=None, indels=True,
+			keep_adapt = False):
 		self.debug = False
 		self.name = _generate_adapter_name() if name is None else name
 		self.sequence = parse_braces(sequence.upper().replace('U', 'T'))  # TODO move away
@@ -382,6 +392,7 @@ class Adapter(object):
 		self.max_error_rate = max_error_rate
 		self.min_overlap = min(min_overlap, len(self.sequence))
 		self.indels = indels
+		self.keeep_adapt = keep_adapt
 		iupac = frozenset('XACGTURYSWKMBDHVN')
 		if adapter_wildcards and not set(self.sequence) <= iupac:
 			for c in self.sequence:
@@ -428,7 +439,7 @@ class Adapter(object):
 		"""
 		read_seq = read.sequence.upper()  # temporary copy
 		remove_before = self.remove_before
-		pos = -1
+		pos = -1 # position of the start of the match
 		# try to find an exact match first unless wildcards are allowed
 		if not self.adapter_wildcards:
 			if self.where == PREFIX:
@@ -437,6 +448,8 @@ class Adapter(object):
 				pos = (len(read_seq) - len(self.sequence)) if read_seq.endswith(self.sequence) else -1
 			else:
 				pos = read_seq.find(self.sequence)
+		# if the exact match is found
+		# Match args: (self, astart, astop, rstart, rstop, matches, errors, remove_before, adapter, read):
 		if pos >= 0:
 			if self.where == ANYWHERE:
 				# guess: if alignment starts at pos 0, it’s a 5' adapter

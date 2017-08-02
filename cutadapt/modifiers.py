@@ -40,7 +40,7 @@ class AdapterCutter(object):
 	"""
 
 	def __init__(self, adapters, times=1, wildcard_file=None, info_file=None,
-			rest_writer=None, action='trim'):
+			rest_writer=None, action='trim', keep_adapt = False):
 		"""
 		adapters -- list of Adapter objects
 
@@ -54,6 +54,7 @@ class AdapterCutter(object):
 		self.action = action
 		self.with_adapters = 0
 		self.adapter_statistics = dict((a, AdapterStatistics(a)) for a in adapters)  # Python 2.6
+		self.keep_adapt = keep_adapt
 
 	def _best_match(self, read):
 		"""
@@ -131,7 +132,11 @@ class AdapterCutter(object):
 			return trimmed_read
 
 		if __debug__:
-			assert len(trimmed_read) < len(read), "Trimmed read isn't shorter than original"
+			if len(trimmed_read) < len(read):
+				pass
+				#TODO: figure out why __debug__ flag is on by default
+				#print(read)
+			#assert len(trimmed_read) < len(read), "Trimmed read isn't shorter than original"
 
 		if self.action == 'trim':
 			# read is already trimmed, nothing to do

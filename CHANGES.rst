@@ -2,11 +2,16 @@
 Changes
 =======
 
-development version
--------------------
 
-* `Issue #118 <https://github.com/marcelm/cutadapt/issues/118>`_:
-  Added support for demultiplexing of paired-end data.
+v1.14~keepadapt-v0.1b (2017-08-02)
+----------------------------------
+UNFINISHED VERSION:
+most of the changes for the below update are in place, but currently it ALWAYS
+keeps the adapter.
+
+* Added option ``-k, --keep-adapt`` to keep the matched adapter sequences in the reads
+-   Note: paired-end reads, linked adapters and colorspace reads are NOT supported
+    using this options.
 
 v1.14 (2017-06-16)
 ------------------

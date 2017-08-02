@@ -55,6 +55,8 @@ Use "cutadapt --help" to see all command-line options.
 See http://cutadapt.readthedocs.io/ for full documentation.
 """
 
+
+
 from __future__ import print_function, division, absolute_import
 
 # Print a helpful error message if the extension modules cannot be imported.
@@ -303,6 +305,8 @@ def get_option_parser():
 		help="Add this prefix to read names. Use {name} to insert the name of the matching adapter.")
 	group.add_option("-y", "--suffix", default='',
 		help="Add this suffix to read names; can also include {name}")
+	group.add_option("-k", "--keep-adapt", action = 'store_true', default = False,
+		help = "Keep the adapter sequences in the trimmed reads.")
 	parser.add_option_group(group)
 
 	group = OptionGroup(parser, "Filtering of processed reads",
@@ -679,7 +683,7 @@ def pipeline_from_parsed_args(options, args, default_outfile):
 	if adapters:
 		adapter_cutter = AdapterCutter(adapters, options.times,
 				options.wildcard_file, options.info_file,
-				rest_writer, options.action)
+				rest_writer, options.action, options.keep_adapt)
 		modifiers.append(adapter_cutter)
 
 	# Modifiers that apply to both reads of paired-end reads unless in legacy mode
@@ -758,6 +762,7 @@ def main(cmdlineargs=None, default_outfile=sys.stdout):
 	parser = get_option_parser()
 	if cmdlineargs is None:
 		cmdlineargs = sys.argv[1:]
+		print(cmdlineargs)
 	options, args = parser.parse_args(args=cmdlineargs)
 	# Setup logging only if there are not already any handlers (can happen when
 	# this function is being called externally such as from unit tests)
@@ -809,4 +814,4 @@ def main(cmdlineargs=None, default_outfile=sys.stdout):
 
 
 if __name__ == '__main__':
-	main()
+	main(['-a', 'ATTTTATGGTGGTGGTGCATGG', '-o', 'cutadapttest.fna', 'D:\\Dropbox\\Tropical\\Sequences\\R11_chunk.fastq'])
